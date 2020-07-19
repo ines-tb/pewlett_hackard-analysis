@@ -46,7 +46,7 @@ WHERE (birth_date BETWEEN '1952-01-01' AND '1955-12-31')
 select * from retirement_info;
 
 -- ********************************************************************
--- Recreate new table for retiring employees (ALL born between 1952-1955)
+-- Recreate new table for retiring employees (ALL born between 1952-1955) adding emp_no
 drop table retirement_info;
 SELECT emp_no, first_name, last_name
 INTO retirement_info
@@ -95,8 +95,8 @@ select * from retirement_dept;
 -- ADDITIONAL LISTS
 
 -- 1. Employee information:
-SELECT * from salaries
-order by to_date desc;
+SELECT * FROM salaries
+ORDER BY to_date DESC;
 
 SELECT e.emp_no, e.first_name, e.last_name, e.gender, s.salary, de.to_date
 INTO emp_info
