@@ -80,15 +80,25 @@ INTO current_emp
 FROM retirement_info AS ri
 LEFT JOIN dept_employees AS de ON ri.emp_no = de.emp_no
 where de.to_date = ('9999-01-01');
-select * from current_emp;
+select count(*) from current_emp;
 
--- Current retiring employee count by department number
-SELECT COUNT(ce.emp_no), de.dept_no
+-- Current retiring employee count by department number 
+-- (Careful not to count people twice if they were in other departments)
+with identify_duplicates AS (
+	SELECT ce.emp_no, de.dept_no, 
+		row_number() OVER (
+			PARTITION BY ce.emp_no
+			ORDER BY de.to_date DESC
+		) AS rnum
+	FROM current_emp AS ce
+	LEFT JOIN dept_employees AS de ON ce.emp_no = de.emp_no
+)
+SELECT COUNT(emp_no), dept_no
 INTO retirement_dept
-FROM current_emp AS ce
-LEFT JOIN dept_employees AS de ON ce.emp_no = de.emp_no
-GROUP BY de.dept_no
-ORDER BY de.dept_no;
+FROM identify_duplicates
+WHERE rnum=1
+GROUP BY dept_no
+ORDER BY dept_no;
 select * from retirement_dept;
 
 -- ********************************************************************
@@ -123,15 +133,9 @@ INNER JOIN dept_employees AS de ON (ce.emp_no = de.emp_no)
 INNER JOIN departments AS d ON (de.dept_no = d.dept_no);
 
 -- *****************************************************************
--- Department retiring employees
-SELECT ri.emp_no, ri.first_name, ri.last_name, d.dept_name
-FROM retirement_info AS ri
-INNER JOIN dept_employees AS de ON (ri.emp_no = de.emp_no)
-INNER JOIN departments AS d ON (de.dept_no = d.dept_no);
-
 -- Sales and Development departments retiring employees
-SELECT ri.emp_no, ri.first_name, ri.last_name, d.dept_name
-FROM retirement_info AS ri
-INNER JOIN dept_employees AS de ON (ri.emp_no = de.emp_no)
+SELECT ce.emp_no, ce.first_name, ce.last_name, d.dept_name
+FROM current_emp AS ce
+INNER JOIN dept_employees AS de ON (ce.emp_no = de.emp_no)
 INNER JOIN departments AS d ON (de.dept_no = d.dept_no)
 where d.dept_name in ('Sales','Development');
